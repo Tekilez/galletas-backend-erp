@@ -68,18 +68,17 @@ create policy "detalle: escritura autenticados" on public.detalle_nota for all u
 
 -- service_role bypass RLS automatico
 
--- 5. REALTIME
-alter publication supabase_realtime add table public.clientes;
-alter publication supabase_realtime add table public.notas_venta;
-alter publication supabase_realtime add table public.detalle_nota;
+-- 5. REALTIME (idempotente: re-ejecutable sin error)
+do $$ begin alter publication supabase_realtime add table public.clientes; exception when duplicate_object then null; end $$;
+do $$ begin alter publication supabase_realtime add table public.notas_venta; exception when duplicate_object then null; end $$;
+do $$ begin alter publication supabase_realtime add table public.detalle_nota; exception when duplicate_object then null; end $$;
 alter table public.clientes replica identity full;
 alter table public.notas_venta replica identity full;
 alter table public.detalle_nota replica identity full;
 
--- 6. INDICES variantes para filtros rápidos (categoria/talla/color) - ya existen pero asegurar
-create index if not exists idx_variantes_categoria on public.variantes using btree (( (select categoria from public.productos where id = producto_id) ));
--- Alternativa simple: indice compuesto ya existe idx_variantes_talla_color, añadimos para categoria via join se usa seq scan, mejor vista
--- Para filtros rápidos, asegurar indices en variantes
+-- 6. INDICES variantes para filtros rápidos (presentacion/sabor) - ya existen pero asegurar
+-- NOTA: Postgres no permite subqueries en indices, por eso categoria se filtra
+-- via join a productos (idx_productos_categoria) + idx_variantes_producto.
 create index if not exists idx_variantes_talla on public.variantes(talla);
 create index if not exists idx_variantes_color on public.variantes(color);
 
