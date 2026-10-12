@@ -41,6 +41,7 @@ COMMENT ON COLUMN public.variantes.talla IS 'Presentación galleta: UNIDAD,PAQ6,
 COMMENT ON COLUMN public.variantes.color IS 'Sabor galleta: CHOCOCHIPS,VAINILLA,AVENA,RELLENA,MANTEQUILLA,COCO,MIXTO. (Nombre de columna se conserva por compatibilidad.)';
 
 -- 4. Índice para búsqueda por presentación exacta - ya existe idx_variantes_presentacion_sabor (schema) pero reforzamos
+DROP INDEX IF EXISTS public.idx_variantes_talla_exact;
 CREATE INDEX IF NOT EXISTS idx_variantes_presentacion_exact ON public.variantes(talla);
 
 -- 5. Vista helper: orden natural de presentaciones (UNIDAD < PAQ6 < PAQ12 < CAJA24 < granel)

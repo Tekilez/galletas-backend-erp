@@ -81,6 +81,9 @@ alter table public.detalle_nota replica identity full;
 -- via join a productos (idx_productos_categoria) + idx_variantes_producto.
 create index if not exists idx_variantes_presentacion on public.variantes(talla);
 create index if not exists idx_variantes_sabor on public.variantes(color);
+-- Limpieza de nombres anteriores (misma columnas, distinto nombre)
+drop index if exists public.idx_variantes_talla;
+drop index if exists public.idx_variantes_color;
 
 comment on table public.clientes is 'Clientes para notas de venta vendedor';
 comment on table public.notas_venta is 'Cabecera nota de venta con codigo_barras NV-YYYYMMDD-XXXX';
