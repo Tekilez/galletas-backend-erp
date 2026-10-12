@@ -79,8 +79,8 @@ alter table public.detalle_nota replica identity full;
 -- 6. INDICES variantes para filtros rápidos (presentacion/sabor) - ya existen pero asegurar
 -- NOTA: Postgres no permite subqueries en indices, por eso categoria se filtra
 -- via join a productos (idx_productos_categoria) + idx_variantes_producto.
-create index if not exists idx_variantes_talla on public.variantes(talla);
-create index if not exists idx_variantes_color on public.variantes(color);
+create index if not exists idx_variantes_presentacion on public.variantes(talla);
+create index if not exists idx_variantes_sabor on public.variantes(color);
 
 comment on table public.clientes is 'Clientes para notas de venta vendedor';
 comment on table public.notas_venta is 'Cabecera nota de venta con codigo_barras NV-YYYYMMDD-XXXX';

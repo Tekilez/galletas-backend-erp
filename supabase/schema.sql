@@ -41,7 +41,9 @@ comment on column public.productos.margen_ganancia is 'Porcentaje ej: 40.00 = 40
 -- =============================================================================
 -- TABLA: variantes
 -- SKU real vendible. Ej: Galleta Chocochips - PAQ12 - CHOCOCHIPS
--- talla = presentacion, color = sabor (nombres de columna se mantienen por compatibilidad)
+-- Presentación y sabor (las columnas conservan los nombres técnicos talla/color
+-- por compatibilidad con el backend y las apps; todo el resto del SQL ya habla
+-- en lenguaje de galletas).
 -- Contiene el stock y precios. Es la tabla que el POS descuenta.
 -- =============================================================================
 create table if not exists public.variantes (
@@ -63,8 +65,9 @@ create table if not exists public.variantes (
 create index if not exists idx_variantes_producto on public.variantes(producto_id);
 create index if not exists idx_variantes_sku on public.variantes(sku);
 create index if not exists idx_variantes_stock on public.variantes(stock_actual);
--- Búsqueda rápida por talla/color
-create index if not exists idx_variantes_talla_color on public.variantes(talla, color);
+-- Búsqueda rápida por presentación/sabor
+drop index if exists public.idx_variantes_talla_color;
+create index if not exists idx_variantes_presentacion_sabor on public.variantes(talla, color);
 
 comment on table public.variantes is 'Variante vendible (SKU). stock_actual es la fuente de verdad para el Kardex. precio_venta se calcula como costo * (1 + margen/100) pero es sobreescribible.';
 comment on column public.variantes.stock_actual is 'NUNCA actualizar manualmente. Usar transacciones para mantener trazabilidad.';

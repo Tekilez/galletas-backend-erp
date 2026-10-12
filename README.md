@@ -23,7 +23,7 @@ Estudiante de Ingeniería de Software (UPC) · Full Stack Jr · React/Next.js ·
 galletas-backend-erp/
   supabase/
     schema.sql                          # DDL base galletas (ejecutar en SQL Editor)
-    migration_002_tallas_flexibles.sql  # presentaciones PAQ6/PAQ12/CAJA24 + trigger normalizar_talla
+    migration_002_presentaciones_flexibles.sql  # presentaciones PAQ6/PAQ12/CAJA24 + trigger normalizar_presentacion
     migration_003_vendedor_clientes_notas.sql
     migration_004_devoluciones.sql
     migration_005_vendedores_auth_chatlog.sql

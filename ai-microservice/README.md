@@ -92,7 +92,7 @@ curl -X POST http://localhost:8000/api/v1/inventory-insights -H "Content-Type: a
 Ejecuta en **Supabase Dashboard > SQL Editor**:
 
 1. `supabase/schema.sql` (base)
-2. `supabase/migration_002_tallas_flexibles.sql` (presentaciones PAQ6/PAQ12/CAJA24 + trigger + seeds Chocochips y Vainilla)
+2. `supabase/migration_002_presentaciones_flexibles.sql` (presentaciones PAQ6/PAQ12/CAJA24 + trigger + seeds Chocochips y Vainilla)
 3. `supabase/migration_009_galletas_nombres.sql` (solo si tu DB ya tenia datos de ropa: convierte nombres)
 
 ## Deploy

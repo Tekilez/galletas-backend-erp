@@ -1,27 +1,31 @@
 -- =============================================================================
--- MIGRACION 002: Presentaciones flexibles para GALLETAS
--- Fecha: 2026-09-17 (adaptada a galletas, misma logica que version ropa)
--- talla = PRESENTACION (UNIDAD, PAQ6, PAQ12, CAJA24, BOLSA500G, BOLSA1KG...)
--- color = SABOR (CHOCOCHIPS, VAINILLA, AVENA, RELLENA, MANTEQUILLA, COCO...)
--- Solución: variantes.talla ya es varchar(20) flexible, pero se añade validación
---           explícita + normalización + datos de ejemplo.
+-- MIGRACION 002: Presentaciones y sabores para GALLETAS
+-- Fecha: 2026-09-17
+-- presentacion (columna tecnica "talla"): UNIDAD, PAQ6, PAQ12, CAJA24, BOLSA500G, BOLSA1KG...
+-- sabor (columna tecnica "color"): CHOCOCHIPS, VAINILLA, AVENA, RELLENA, MANTEQUILLA, COCO...
+-- Los nombres de columna se conservan por compatibilidad con el backend;
+-- los CHECKs, triggers y vistas ya hablan en lenguaje de galletas.
 -- Ejecutar en: Supabase Dashboard > SQL Editor > Run
 -- =============================================================================
 
--- 1. Asegurar que talla siga siendo varchar(20) flexible (drop check restrictivo si existiera)
+-- 1. Quitar validaciones anteriores (incluidas las de ropa) y la actual si existe
 ALTER TABLE public.variantes DROP CONSTRAINT IF EXISTS chk_variantes_talla_enum;
 ALTER TABLE public.variantes DROP CONSTRAINT IF EXISTS chk_talla_formato;
+ALTER TABLE public.variantes DROP CONSTRAINT IF EXISTS chk_presentacion_formato;
 
--- 2. Nuevo CHECK flexible: presentaciones de galletas
+-- 2. Nuevo CHECK: presentaciones de galletas
 --    Acepta: UNIDAD, PAQ6, PAQ12, CAJA24, BOLSA500G, BOLSA1KG, DOCENA, GRANEL, PACK6, PACK12, UNICA
 ALTER TABLE public.variantes
-  ADD CONSTRAINT chk_talla_formato CHECK (
+  ADD CONSTRAINT chk_presentacion_formato CHECK (
     talla ~* '^(UNIDAD|PAQ6|PAQ12|CAJA24|BOLSA500G|BOLSA1KG|DOCENA|GRANEL|PACK6|PACK12|UNICA|ÚNICA)$'
     AND length(talla) BETWEEN 1 AND 20
   );
 
--- 3. Normalización: trigger para trim + upper (misma logica, solo cambian ejemplos)
-CREATE OR REPLACE FUNCTION public.normalizar_talla()
+-- 3. Normalización: trim + UPPER en presentación y trim en sabor
+DROP TRIGGER IF EXISTS trg_variantes_normalizar_talla ON public.variantes;
+DROP TRIGGER IF EXISTS trg_variantes_normalizar_presentacion ON public.variantes;
+DROP FUNCTION IF EXISTS public.normalizar_talla();
+CREATE OR REPLACE FUNCTION public.normalizar_presentacion()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   NEW.talla := upper(btrim(NEW.talla));
@@ -29,19 +33,19 @@ BEGIN
   RETURN NEW;
 END; $$;
 
-DROP TRIGGER IF EXISTS trg_variantes_normalizar_talla ON public.variantes;
-CREATE TRIGGER trg_variantes_normalizar_talla
+CREATE TRIGGER trg_variantes_normalizar_presentacion
   BEFORE INSERT OR UPDATE OF talla, color ON public.variantes
-  FOR EACH ROW EXECUTE FUNCTION public.normalizar_talla();
+  FOR EACH ROW EXECUTE FUNCTION public.normalizar_presentacion();
 
-COMMENT ON COLUMN public.variantes.talla IS 'Presentación galleta: UNIDAD,PAQ6,PAQ12,CAJA24,BOLSA500G,BOLSA1KG,DOCENA,GRANEL. Caso principal = PAQ12 Chocochips.';
-COMMENT ON COLUMN public.variantes.color IS 'Sabor galleta: CHOCOCHIPS,VAINILLA,AVENA,RELLENA,MANTEQUILLA,COCO,MIXTO.';
+COMMENT ON COLUMN public.variantes.talla IS 'Presentación galleta: UNIDAD,PAQ6,PAQ12,CAJA24,BOLSA500G,BOLSA1KG,DOCENA,GRANEL. Caso principal = PAQ12 Chocochips. (Nombre de columna se conserva por compatibilidad.)';
+COMMENT ON COLUMN public.variantes.color IS 'Sabor galleta: CHOCOCHIPS,VAINILLA,AVENA,RELLENA,MANTEQUILLA,COCO,MIXTO. (Nombre de columna se conserva por compatibilidad.)';
 
--- 4. Índice para búsqueda por presentación exacta - ya existe idx_variantes_talla_color pero reforzamos
-CREATE INDEX IF NOT EXISTS idx_variantes_talla_exact ON public.variantes(talla);
+-- 4. Índice para búsqueda por presentación exacta - ya existe idx_variantes_presentacion_sabor (schema) pero reforzamos
+CREATE INDEX IF NOT EXISTS idx_variantes_presentacion_exact ON public.variantes(talla);
 
 -- 5. Vista helper: orden natural de presentaciones (UNIDAD < PAQ6 < PAQ12 < CAJA24 < granel)
-CREATE OR REPLACE VIEW public.v_variantes_orden_talla AS
+DROP VIEW IF EXISTS public.v_variantes_orden_talla;
+CREATE OR REPLACE VIEW public.v_variantes_orden_presentacion AS
 SELECT v.*,
   CASE
     WHEN upper(talla) = 'UNIDAD'    THEN 10
@@ -55,10 +59,10 @@ SELECT v.*,
     WHEN upper(talla) = 'BOLSA1KG'  THEN 60
     WHEN upper(talla) = 'GRANEL'    THEN 70
     ELSE 200
-  END AS talla_orden
+  END AS presentacion_orden
 FROM public.variantes v;
 
--- 6. Datos de ejemplo GALLETAS (misma estructura que version ropa)
+-- 6. Datos de ejemplo GALLETAS
 --    Producto 1: Galleta Chocochips Clasica (PAQ6, PAQ12, CAJA24, BOLSA500G, BOLSA1KG)
 --    Producto 2: Galleta Vainilla Francesa (PAQ6, PAQ12, CAJA24...)
 DO $$
@@ -108,6 +112,6 @@ BEGIN
 END $$;
 
 -- 7. Test rápido de validación (descomentar para probar)
--- SELECT * FROM public.v_variantes_orden_talla ORDER BY talla_orden LIMIT 20;
+-- SELECT * FROM public.v_variantes_orden_presentacion ORDER BY presentacion_orden LIMIT 20;
 -- INSERT INTO public.variantes (producto_id, sku, talla, color, precio_costo, precio_venta) VALUES ((SELECT id FROM productos LIMIT 1), 'TEST-PAQ12', 'PAQ12', 'CHOCOCHIPS', 10, 15); -- debe OK
 -- INSERT INTO public.variantes (producto_id, sku, talla, color, precio_costo, precio_venta) VALUES ((SELECT id FROM productos LIMIT 1), 'TEST-MALA', 'XXXXL', 'CHOCOCHIPS', 10, 15); -- debe fallar CHECK
