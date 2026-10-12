@@ -274,10 +274,11 @@ begin
   end if;
 end $$;
 
-alter publication supabase_realtime add table public.variantes;
-alter publication supabase_realtime add table public.transacciones;
+-- Idempotente: re-ejecutable aunque las tablas ya sean miembros (error 42710)
+do $$ begin alter publication supabase_realtime add table public.variantes; exception when duplicate_object then null; end $$;
+do $$ begin alter publication supabase_realtime add table public.transacciones; exception when duplicate_object then null; end $$;
 -- Opcional: también productos si quieres reflejar cambios de margen en vivo
-alter publication supabase_realtime add table public.productos;
+do $$ begin alter publication supabase_realtime add table public.productos; exception when duplicate_object then null; end $$;
 
 -- Configurar replica identity para que Realtime envíe old/new record completos
 alter table public.variantes replica identity full;
