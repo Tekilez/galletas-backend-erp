@@ -10,16 +10,16 @@ from enum import Enum
 # ---------- OCR ----------
 
 class ReceiptItem(BaseModel):
-    nombre_general: str = Field(..., example="Polo Oversize Negro")
+    nombre_general: str = Field(..., example="Galleta Chocochips")
     cantidad: int = Field(..., ge=1, example=12)
-    precio_costo: float = Field(..., ge=0, description="Precio de Costo unitario", example=35.50)
-    talla: Optional[str] = Field(default=None, example="M")
-    color: Optional[str] = Field(default=None, example="Negro")
-    sku_sugerido: Optional[str] = Field(default=None, example="POL-OVR-M-NEG-001")
+    precio_costo: float = Field(..., ge=0, description="Precio de Costo unitario", example=15.00)
+    talla: Optional[str] = Field(default=None, example="PAQ12", description="Presentacion (columna talla por compatibilidad)")
+    color: Optional[str] = Field(default=None, example="CHOCOCHIPS", description="Sabor (columna color por compatibilidad)")
+    sku_sugerido: Optional[str] = Field(default=None, example="GALL-CHOCO-PAQ12-001")
 
 class ScanReceiptResponse(BaseModel):
     success: bool = True
-    proveedor: Optional[str] = Field(default=None, example="Gamarra Textiles S.A.C")
+    proveedor: Optional[str] = Field(default=None, example="Molino Galletar S.A.C")
     fecha_boleta: Optional[str] = Field(default=None, example="2026-09-10")
     moneda: str = Field(default="PEN", example="PEN")
     items: List[ReceiptItem]
@@ -37,9 +37,9 @@ class ScanReceiptError(BaseModel):
 # ---------- INSIGHTS ----------
 
 class KardexItemStat(BaseModel):
-    producto_nombre: str = Field(..., example="Polo Oversize Algodón")
-    variante_sku: Optional[str] = Field(default=None, example="POL-OVR-M-NEG-001")
-    categoria: Optional[str] = Field(default=None, example="polos")
+    producto_nombre: str = Field(..., example="Galleta Chocochips Clasica")
+    variante_sku: Optional[str] = Field(default=None, example="GALL-CHOCO-PAQ12-001")
+    categoria: Optional[str] = Field(default=None, example="clasicas")
     total_vendido: int = Field(..., ge=0, example=120)
     total_comprado: Optional[int] = Field(default=None, example=150)
     stock_actual: Optional[int] = Field(default=None, example=30)
@@ -50,7 +50,7 @@ class InventoryInsightsRequest(BaseModel):
     productos_mas_vendidos: List[KardexItemStat] = Field(..., description="Top sellers")
     productos_menos_vendidos: List[KardexItemStat] = Field(..., description="Low sellers / stock muerto")
     stock_critico: Optional[List[KardexItemStat]] = Field(default=None, description="Variantes con stock <= stock_minimo")
-    notas_adicionales: Optional[str] = Field(default=None, example="Campaña escolar próxima")
+    notas_adicionales: Optional[str] = Field(default=None, example="Campaña navideña próxima")
 
 class InventoryInsightsResponse(BaseModel):
     success: bool = True
@@ -69,9 +69,9 @@ class HealthResponse(BaseModel):
 
 # ---------- PRODUCTOS CRUD ----------
 class ProductoBase(BaseModel):
-    nombre: str = Field(..., min_length=1, max_length=150, example="Polo Oversize Algodón")
-    descripcion: Optional[str] = Field(default=None, example="Polo unisex 100% algodón")
-    categoria: Optional[str] = Field(default=None, max_length=80, example="polos")
+    nombre: str = Field(..., min_length=1, max_length=150, example="Galleta Chocochips Clasica")
+    descripcion: Optional[str] = Field(default=None, example="Galleta con chispas de chocolate")
+    categoria: Optional[str] = Field(default=None, max_length=80, example="clasicas")
     margen_ganancia: float = Field(default=40.0, ge=0, le=500, example=45.0)
     activo: bool = Field(default=True)
 
@@ -97,13 +97,13 @@ class ProductoResponse(ProductoBase):
 # ---------- VARIANTES CRUD ----------
 class VarianteBase(BaseModel):
     producto_id: str = Field(..., description="UUID del producto padre")
-    sku: str = Field(..., min_length=1, max_length=50, example="POL-OVR-M-NEG-001")
-    talla: str = Field(..., min_length=1, max_length=20, example="29", description="Flexible: S,M,L,XL,2XL para polos/casacas Y 28,29,30..44 para pantalones/jeans. Numérica 24-50 o letra estándar. Se normaliza a UPPER si es letra.")
-    color: str = Field(..., min_length=1, max_length=50, example="Negro")
+    sku: str = Field(..., min_length=1, max_length=50, example="GALL-CHOCO-PAQ12-001")
+    talla: str = Field(..., min_length=1, max_length=20, example="PAQ12", description="Presentacion galleta (UNIDAD,PAQ6,PAQ12,CAJA24,BOLSA500G,BOLSA1KG). Nombre de columna se mantiene por compatibilidad.")
+    color: str = Field(..., min_length=1, max_length=50, example="CHOCOCHIPS", description="Sabor galleta (CHOCOCHIPS,VAINILLA,AVENA,RELLENA,MANTEQUILLA,COCO). Nombre de columna se mantiene por compatibilidad.")
     stock_actual: int = Field(default=0, ge=0, example=25)
     stock_minimo: int = Field(default=5, ge=0, example=5)
-    precio_costo: float = Field(..., ge=0, example=35.00)
-    precio_venta: float = Field(..., ge=0, example=50.75, description="Si = precio_costo, el trigger DB calcula con margen")
+    precio_costo: float = Field(..., ge=0, example=15.00)
+    precio_venta: float = Field(..., ge=0, example=21.75, description="Si = precio_costo, el trigger DB calcula con margen")
     imagen_url: Optional[str] = None
     activo: bool = Field(default=True)
 
@@ -131,10 +131,10 @@ class VarianteResponse(VarianteBase):
 
 # ---------- CHAT STOCK ----------
 class ChatRequest(BaseModel):
-    pregunta: str = Field(..., example="¿Cuántos stock tienen los polos?", description="Pregunta en lenguaje natural sobre stock")
-    categoria: Optional[str] = Field(default=None, example="polos", description="Opcional: filtra por categoria")
-    talla: Optional[str] = Field(default=None, example="M")
-    color: Optional[str] = Field(default=None, example="Negro")
+    pregunta: str = Field(..., example="¿Cuánto stock tienen las chocochips?", description="Pregunta en lenguaje natural sobre stock")
+    categoria: Optional[str] = Field(default=None, example="clasicas", description="Opcional: filtra por categoria")
+    talla: Optional[str] = Field(default=None, example="PAQ12", description="Presentacion (columna talla por compatibilidad)")
+    color: Optional[str] = Field(default=None, example="CHOCOCHIPS", description="Sabor (columna color por compatibilidad)")
 
 class ChatResponse(BaseModel):
     success: bool = True
@@ -172,7 +172,7 @@ class ClienteResponse(ClienteBase):
 class NotaItem(BaseModel):
     variante_id: str = Field(..., example="uuid-variante")
     cantidad: int = Field(..., gt=0, example=2)
-    precio_unitario: float = Field(..., ge=0, example=39.20)
+    precio_unitario: float = Field(..., ge=0, example=19.60)
 
 class NotaCreate(BaseModel):
     cliente: Optional[ClienteCreate] = Field(default=None, description="Si se envía, crea cliente al vuelo")

@@ -23,7 +23,7 @@ class ChatUseCases:
             from app.interfaces.api.schemas import ChatResponse
             return ChatResponse(
                 pregunta=pregunta,
-                respuesta="Soy Kardex IA, tu asistente de inventario para la tienda (Gamarra) potenciado con Gemini. Puedo decirte stock por talla/color, más vendido, menos vendido y stock crítico. Pregúntame: '¿cuántos stock tienen los polos talla M?'",
+                respuesta="Soy Kardex IA, tu asistente de inventario de galletas (Galletar Store) potenciado con Gemini. Puedo decirte stock por presentación/sabor, más vendido, menos vendido y stock crítico. Pregúntame: '¿cuánto stock tienen las chocochips PAQ12?'",
                 datos={"intencion": "identidad"},
                 llm_provider="google",
                 model="gemini-2.0-flash",
@@ -33,7 +33,7 @@ class ChatUseCases:
             from app.interfaces.api.schemas import ChatResponse
             return ChatResponse(
                 pregunta=pregunta,
-                respuesta="¡Hola! Soy Kardex IA (Gemini). Pregúntame: '¿cuántos polos talla M tienen?', '¿cuál es el más vendido?' o 'stock crítico' y te respondo con datos reales del Kardex.",
+                respuesta="¡Hola! Soy Kardex IA (Gemini). Pregúntame: '¿cuántas chocochips PAQ12 tienen?', '¿cuál es la más vendida?' o 'stock crítico' y te respondo con datos reales del Kardex.",
                 datos={"intencion": "saludo"},
                 llm_provider="google",
                 model="gemini-2.0-flash",
@@ -51,34 +51,36 @@ class ChatUseCases:
             return await self._mayor_stock(pregunta, categoria, talla, color)
 
         # 1b. Si no es pregunta de stock, ayuda vía IA
-        if not any(k in q for k in ["stock", "cuanto", "cuánto", "cuantos", "cuántos", "tienes", "talla", "polo", "pantalon", "pantalón", "jean", "variante", "producto", "mas vendido", "más vendido", "menos vendido"]):
+        if not any(k in q for k in ["stock", "cuanto", "cuánto", "cuantos", "cuántos", "tienes", "talla", "presentacion", "presentación", "galleta", "chocochips", "vainilla", "avena", "rellena", "sabor", "variante", "producto", "mas vendido", "más vendido", "menos vendido"]):
             from app.interfaces.api.schemas import ChatResponse, InventoryInsightsRequest
             try:
                 prompt_data = InventoryInsightsRequest(periodo="ayuda", productos_mas_vendidos=[], productos_menos_vendidos=[], notas_adicionales=f"Usuario pregunta: {pregunta}. No es sobre stock. Guía al usuario a preguntas de Kardex en 1 oración.")
                 analisis, provider, model = await self.llm.generate(prompt_data)
                 return ChatResponse(pregunta=pregunta, respuesta=analisis, datos={"intencion": "ayuda"}, llm_provider=provider, model=model, generated_at=datetime.now(timezone.utc))
             except Exception:
-                return ChatResponse(pregunta=pregunta, respuesta="Puedo ayudarte con Kardex: prueba '¿cuántos stock tienen los polos?', '¿cuál es el más vendido?' o 'stock crítico'. ¿Qué quieres consultar?", datos={"intencion": "ayuda"}, llm_provider="deterministic", model="help-v1", generated_at=datetime.now(timezone.utc))
+                return ChatResponse(pregunta=pregunta, respuesta="Puedo ayudarte con Kardex: prueba '¿cuánto stock tienen las chocochips?', '¿cuál es la más vendida?' o 'stock crítico'. ¿Qué quieres consultar?", datos={"intencion": "ayuda"}, llm_provider="deterministic", model="help-v1", generated_at=datetime.now(timezone.utc))
 
         # 2. Stock genérico
         # Heurística: detectar filtros en la pregunta si no vienen explicitos
         if not categoria:
-            if "polo" in q:
-                categoria = "polos"
-            elif "pantalon" in q or "pantalón" in q or "jean" in q:
-                if "jean" in q:
-                    categoria = "jeans"
-                else:
-                    categoria = "pantalones"
+            if "chocochips" in q or "choco" in q:
+                categoria = "clasicas"
+            elif "vainilla" in q:
+                categoria = "clasicas"
+            elif "avena" in q or "integral" in q or "saludable" in q:
+                categoria = "saludables"
+            elif "rellena" in q:
+                categoria = "rellenas"
+            elif "galleta" in q:
+                categoria = None  # todas las galletas
         if not talla:
-            m = re.search(r"\btalla\s*(\d{2}|[xsml]{1,3}|2xl|3xl)\b", q)
+            m = re.search(r"\b(paq6|paq12|caja24|bolsa500g|bolsa1kg|unidad|docena|granel|pack6|pack12)\b", q)
             if m:
                 talla = m.group(1).upper()
-            else:
-                # buscar numero suelto 28-44
-                m2 = re.search(r"\b(2[8-9]|3[0-9]|4[0-4])\b", q)
-                if m2 and ("pantalon" in q or "jean" in q):
-                    talla = m2.group(1)
+        if not color:
+            m3 = re.search(r"\b(chocochips|vainilla|avena|rellena|mantequilla|coco|mixto)\b", q)
+            if m3:
+                color = m3.group(1).upper()
 
         # Consultar DB real (hexagonal via ports)
         productos = self.producto_repo.list(categoria=categoria, activo=None, search=None, limit=100, offset=0)
@@ -114,10 +116,12 @@ class ChatUseCases:
         }
 
         # Construir respuesta determinística (stock real, sin inventar)
-        if categoria == "polos":
-            base = f"Tienes {total_productos} producto(s) de polos con {total_variantes} variante(s) y stock total {stock_total} unidades."
-        elif categoria == "pantalones":
-            base = f"Tienes {total_productos} producto(s) de pantalones con {total_variantes} variante(s) (talla {talla or 'todas'}) y stock total {stock_total} unidades."
+        if categoria == "clasicas":
+            base = f"Tienes {total_productos} producto(s) de galletas clásicas con {total_variantes} variante(s) y stock total {stock_total} unidades."
+        elif categoria == "saludables":
+            base = f"Tienes {total_productos} producto(s) de galletas saludables con {total_variantes} variante(s) (presentación {talla or 'todas'}) y stock total {stock_total} unidades."
+        elif categoria == "rellenas":
+            base = f"Tienes {total_productos} producto(s) de galletas rellenas con {total_variantes} variante(s) y stock total {stock_total} unidades."
         elif categoria:
             base = f"Tienes {total_productos} producto(s) en categoría '{categoria}' con {total_variantes} variante(s) y stock total {stock_total} unidades."
         else:

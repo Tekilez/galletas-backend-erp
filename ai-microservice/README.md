@@ -1,6 +1,6 @@
-# Kardex IA Microservice — Hexagonal (Ports & Adapters)
+# Kardex IA Microservice — Galletas (Hexagonal / Ports & Adapters)
 
-Microservicio FastAPI para POS/Kardex tienda de ropa. Arquitectura hexagonal mantiene todo lo existente pero desacoplado.
+Microservicio FastAPI para POS/Kardex tienda de galletas (Galletar Store). Misma logica, solo cambian nombres. Arquitectura hexagonal mantiene todo lo existente pero desacoplado.
 
 ## Arquitectura Hexagonal
 
@@ -15,11 +15,11 @@ ai-microservice/app/
 ├── infrastructure/         # Adapters secundarios (implementan ports)
 │   ├── config/settings.py  # Settings (pydantic-settings) — fuente única
 │   ├── persistence/        # supabase_client.py + supabase_*_repository.py (Supabase/PostgREST)
-│   ├── ocr/ocr_adapter.py  # Mock -> Google Vision -> HF (talla 29 vs M)
+│   ├── ocr/ocr_adapter.py  # Mock -> Google Vision -> HF (presentacion PAQ12 vs PAQ6)
 │   └── llm/llm_adapter.py  # Mock -> Gemini -> Ollama
 ├── interfaces/             # Adapters primarios (entrada)
 │   └── api/
-│       ├── schemas.py      # Contratos Pydantic (talla flexible 29/M)
+│       ├── schemas.py      # Contratos Pydantic (talla=presentacion PAQ12, color=sabor)
 │       ├── routers/        # productos.py, variantes.py, transacciones.py, ocr.py, insights.py -> llaman use_cases vía DI
 │       └── dependencies.py # Container DI (get_*_use_cases)
 ├── main.py                 # App factory hexagonal (FastAPI + CORS + lifespan)
@@ -44,7 +44,7 @@ Compatibilidad: imports antiguos `from app.routers import productos` y `from app
                 -> Supabase / Gemini / Ollama
 ```
 
-Talla flexible: `variantes.talla varchar(20)` acepta `29,30,32...44` (pantalones) y `S,M,L,XL,2XL` (polos) — trigger `normalizar_talla()` en `supabase/migration_002_tallas_flexibles.sql`.
+Presentaciones galletas: `variantes.talla varchar(20)` acepta `PAQ6,PAQ12,CAJA24,BOLSA500G,BOLSA1KG,UNIDAD` y `color` = sabor (`CHOCOCHIPS,VAINILLA,AVENA...`) — trigger `normalizar_talla()` en `supabase/migration_002_tallas_flexibles.sql`. Nombres de columna se mantienen por compatibilidad.
 
 ## Quickstart local
 
@@ -63,16 +63,16 @@ Health: `http://localhost:8000/health` -> `{"status":"ok"}`
 ## Test endpoints (hexagonal mantiene URLs idénticas)
 
 ```powershell
-# Listar pantalón talla 29 (post-migración)
-curl "http://localhost:8000/api/v1/variantes?talla=29"
+# Listar chocochips PAQ12 (post-migración)
+curl "http://localhost:8000/api/v1/variantes?talla=PAQ12&color=CHOCOCHIPS"
 
-# Listar polo talla M
-curl "http://localhost:8000/api/v1/variantes?talla=M"
+# Listar vainilla PAQ6
+curl "http://localhost:8000/api/v1/variantes?talla=PAQ6&color=VAINILLA"
 
-# Crear variante pantalón 29
-curl -X POST http://localhost:8000/api/v1/variantes -H "Content-Type: application/json" -d '{"producto_id":"...","sku":"PANT-SP-NEG-29-TEST","talla":"29","color":"Negro","precio_costo":55,"precio_venta":79.75}'
+# Crear variante galleta PAQ12
+curl -X POST http://localhost:8000/api/v1/variantes -H "Content-Type: application/json" -d '{"producto_id":"...","sku":"GALL-CHOCO-PAQ12-TEST","talla":"PAQ12","color":"CHOCOCHIPS","precio_costo":15,"precio_venta":21.75}'
 
-# OCR (mock, sin API key) — detecta 29 vs M
+# OCR (mock, sin API key) — detecta PAQ12 vs PAQ6
 curl -X POST http://localhost:8000/api/v1/scan-receipt -F "file=@boleta.jpg"
 
 # Insights
@@ -92,7 +92,8 @@ curl -X POST http://localhost:8000/api/v1/inventory-insights -H "Content-Type: a
 Ejecuta en **Supabase Dashboard > SQL Editor**:
 
 1. `supabase/schema.sql` (base)
-2. `supabase/migration_002_tallas_flexibles.sql` (talla 29 + trigger + seeds Pantalón Semi Pitillo 28-44 y Polo S-2XL)
+2. `supabase/migration_002_tallas_flexibles.sql` (presentaciones PAQ6/PAQ12/CAJA24 + trigger + seeds Chocochips y Vainilla)
+3. `supabase/migration_009_galletas_nombres.sql` (solo si tu DB ya tenia datos de ropa: convierte nombres)
 
 ## Deploy
 

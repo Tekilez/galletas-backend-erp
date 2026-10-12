@@ -1,8 +1,8 @@
 # galletas-backend-erp 🍪
 
-Backend ERP para control de inventario (Kardex) + POS — **Supabase (PostgreSQL + Realtime + Auth + RLS)** + **FastAPI (IA Microservice)**.
+Backend ERP para control de inventario de **galletas** (Kardex) + POS — **Supabase (PostgreSQL + Realtime + Auth + RLS)** + **FastAPI (IA Microservice)**.
 
-> Migrado desde `back-inventario`. Repo público listo para desplegar.
+> Migrado desde `back-inventario` (misma logica, solo cambian nombres: talla=presentacion, color=sabor). Repo público listo para desplegar.
 
 ## Owner
 
@@ -22,15 +22,16 @@ Estudiante de Ingeniería de Software (UPC) · Full Stack Jr · React/Next.js ·
 ```
 galletas-backend-erp/
   supabase/
-    schema.sql                          # DDL base (ejecutar en SQL Editor)
-    migration_002_tallas_flexibles.sql  # tallas 29-44 + S-2XL + trigger normalizar_talla
+    schema.sql                          # DDL base galletas (ejecutar en SQL Editor)
+    migration_002_tallas_flexibles.sql  # presentaciones PAQ6/PAQ12/CAJA24 + trigger normalizar_talla
     migration_003_vendedor_clientes_notas.sql
     migration_004_devoluciones.sql
     migration_005_vendedores_auth_chatlog.sql
     migration_006_vendedor_snapshot.sql
     migration_007_trigger_devolucion.sql
     migration_008_control_asistencia.sql
-    seed_datos.sql
+    migration_009_galletas_nombres.sql  # solo si tu DB ya tenia ropa: convierte nombres
+    seed_datos.sql                      # seed galletas (Chocochips/Vainilla/Avena)
   ai-microservice/      # FastAPI hexagonal (Ports & Adapters)
     app/main.py
     app/domain/         # entidades puras + ports (sin deps externas)
@@ -45,10 +46,10 @@ galletas-backend-erp/
 
 ## PARTE 1 — Supabase
 
-1. Crea proyecto en Supabase
+1. Crea proyecto en Supabase (ej: `Galletar_Store`)
 2. SQL Editor → pega `supabase/schema.sql` → Run
-3. Corre migraciones en orden `migration_002` → `migration_008`
-4. (Opcional) `seed_datos.sql` para datos de prueba
+3. Corre migraciones en orden `migration_002` → `migration_009` (`009` solo convierte nombres si venias de ropa)
+4. (Opcional) `seed_datos.sql` para datos de galletas de prueba
 5. Verifica Realtime: Database → Realtime → `variantes` / `transacciones` enabled
 6. Frontend se suscribe:
 

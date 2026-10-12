@@ -1,6 +1,8 @@
-# Control de Inventario (Kardex) + POS - Backend Híbrido
+# Control de Inventario Galletas (Kardex) + POS - Backend Híbrido
 
 Arquitectura: **Supabase (PostgreSQL + Realtime + Auth + RLS)** + **FastAPI (IA Microservice)**
+
+Dominio: galletas. Misma logica que version ropa, solo cambian nombres (talla=presentacion, color=sabor).
 
 ## Estructura del repo
 ```

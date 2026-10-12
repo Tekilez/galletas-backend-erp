@@ -1,7 +1,7 @@
 -- =============================================================================
--- KARDEX / POS - ESQUEMA SUPABASE (PostgreSQL 15+)
+-- GALLETAS ERP / KARDEX / POS - ESQUEMA SUPABASE (PostgreSQL 15+)
 -- Arquitectura híbrida: Supabase (DB + Realtime + Auth) + FastAPI (IA)
--- Autor: Arquitecto Cloud Senior - 2026
+-- Dominio: galletas. Misma logica, solo cambian nombres.
 -- Ejecutar en: Supabase Dashboard > SQL Editor
 -- =============================================================================
 
@@ -17,13 +17,13 @@ end $$;
 
 -- =============================================================================
 -- TABLA: productos
--- Información general del producto padre. Ej: "Polo Oversize Algodón"
+-- Información general del producto padre. Ej: "Galleta Chocochips Clasica"
 -- =============================================================================
 create table if not exists public.productos (
   id uuid primary key default gen_random_uuid(),
   nombre varchar(150) not null,
   descripcion text,
-  categoria varchar(80), -- ej: polos, jeans, vestidos
+  categoria varchar(80), -- ej: clasicas, rellenas, saludables, premium, temporada
   margen_ganancia numeric(5,2) not null default 40.00 check (margen_ganancia >= 0 and margen_ganancia <= 500),
   activo boolean not null default true,
   created_at timestamptz not null default now(),
@@ -40,15 +40,16 @@ comment on column public.productos.margen_ganancia is 'Porcentaje ej: 40.00 = 40
 
 -- =============================================================================
 -- TABLA: variantes
--- SKU real vendible. Ej: Polo Oversize - Talla M - Color Negro
+-- SKU real vendible. Ej: Galleta Chocochips - PAQ12 - CHOCOCHIPS
+-- talla = presentacion, color = sabor (nombres de columna se mantienen por compatibilidad)
 -- Contiene el stock y precios. Es la tabla que el POS descuenta.
 -- =============================================================================
 create table if not exists public.variantes (
   id uuid primary key default gen_random_uuid(),
   producto_id uuid not null references public.productos(id) on delete cascade,
-  sku varchar(50) unique not null, -- ej: POL-OVR-M-NEG-001
-  talla varchar(20) not null, -- XS,S,M,L,XL, 28,30,32 o "Única"
-  color varchar(50) not null,
+  sku varchar(50) unique not null, -- ej: GALL-CHOCO-PAQ12-001
+  talla varchar(20) not null, -- presentacion: UNIDAD,PAQ6,PAQ12,CAJA24,BOLSA500G,BOLSA1KG
+  color varchar(50) not null, -- sabor: CHOCOCHIPS,VAINILLA,AVENA,RELLENA,MANTEQUILLA,COCO
   stock_actual integer not null default 0 check (stock_actual >= 0),
   stock_minimo integer not null default 5 check (stock_minimo >= 0),
   precio_costo numeric(10,2) not null check (precio_costo >= 0),
@@ -284,15 +285,15 @@ alter table public.transacciones replica identity full;
 alter table public.productos replica identity full;
 
 -- =============================================================================
--- DATOS DE EJEMPLO (opcional, comentar en prod)
+-- DATOS DE EJEMPLO GALLETAS (opcional, comentar en prod)
 -- =============================================================================
 -- insert into public.productos (nombre, descripcion, categoria, margen_ganancia) values
--- ('Polo Oversize Algodón', 'Polo unisex 100% algodón', 'polos', 45.00),
--- ('Jeans Mom Fit', 'Jeans tiro alto dama', 'jeans', 50.00);
+-- ('Galleta Chocochips Clasica', 'Galleta con chispas de chocolate', 'clasicas', 45.00),
+-- ('Galleta Avena Integral', 'Galleta de avena integral saludable', 'saludables', 50.00);
 --
 -- insert into public.variantes (producto_id, sku, talla, color, stock_actual, precio_costo, precio_venta) values
--- ((select id from public.productos where nombre='Polo Oversize Algodón' limit 1), 'POL-OVR-M-NEG-001', 'M', 'Negro', 25, 35.00, 50.75),
--- ((select id from public.productos where nombre='Polo Oversize Algodón' limit 1), 'POL-OVR-L-BLA-001', 'L', 'Blanco', 10, 35.00, 50.75);
+-- ((select id from public.productos where nombre='Galleta Chocochips Clasica' limit 1), 'GALL-CHOCO-PAQ12-001', 'PAQ12', 'CHOCOCHIPS', 25, 15.00, 21.75),
+-- ((select id from public.productos where nombre='Galleta Chocochips Clasica' limit 1), 'GALL-CHOCO-PAQ6-001', 'PAQ6', 'CHOCOCHIPS', 10, 8.50, 12.50);
 
 -- =============================================================================
 -- NOTAS DE ARQUITECTURA

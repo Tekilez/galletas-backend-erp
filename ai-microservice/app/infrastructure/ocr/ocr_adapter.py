@@ -14,17 +14,16 @@ from app.domain.ports.ocr_port import OcrPort
 settings = get_settings()
 
 MOCK_CATALOG = [
-    ("Polo Oversize Algodón", "M", "Negro"),
-    ("Polo Oversize Algodón", "L", "Blanco"),
-    ("Polo Camisero Cuello", "XL", "Negro"),
-    ("Polo Camisero Cuello", "2XL", "Negro"),
-    ("Pantalón Strech Semi Pitillo", "29", "Negro"),
-    ("Pantalón Strech Semi Pitillo", "30", "Azul"),
-    ("Pantalón Strech Semi Pitillo", "32", "Negro"),
-    ("Pantalón Strech Semi Pitillo", "34", "Azul"),
-    ("Jeans Mom Fit", "32", "Celeste"),
-    ("Vestido Lino Verano", "S", "Beige"),
-    ("Casaca Denim", "M", "Azul Oscuro"),
+    ("Galleta Chocochips Clasica", "PAQ12", "CHOCOCHIPS"),
+    ("Galleta Chocochips Clasica", "PAQ6", "CHOCOCHIPS"),
+    ("Galleta Vainilla Francesa", "PAQ12", "VAINILLA"),
+    ("Galleta Vainilla Francesa", "PAQ6", "VAINILLA"),
+    ("Galleta Chocochips Clasica", "CAJA24", "CHOCOCHIPS"),
+    ("Galleta Chocochips Clasica", "BOLSA500G", "CHOCOCHIPS"),
+    ("Galleta Avena Integral", "BOLSA500G", "AVENA"),
+    ("Galleta Rellena Chocolate", "PAQ12", "RELLENA"),
+    ("Galleta Mantequilla Artesanal", "PAQ6", "MANTEQUILLA"),
+    ("Galleta Coco Crunch", "PAQ12", "COCO"),
 ]
 
 async def _ocr_mock(file: UploadFile) -> Tuple[str, list]:
@@ -40,20 +39,20 @@ async def _ocr_mock(file: UploadFile) -> Tuple[str, list]:
     elapsed_ms = int((time.time() - start) * 1000) + random.randint(200, 600)
     raw_text = (
         "BOLETA ELECTRONICA F001-8821\n"
-        "GAMARRA TEXTILES S.A.C - RUC 20123456789\n"
+        "MOLINO GALLETAR S.A.C - RUC 20123456789\n"
         "Fecha: 2026-09-10\n"
         "Cant  Descripcion                          P.U   Total\n"
-        "6    Pantalón Strech 29 Negro             55.00  330.00\n"
-        "6    Pantalón Strech 32 Azul              55.00  330.00\n"
-        "12   Polo Oversize M Negro                35.50  426.00\n"
-        "8    Jeans Mom Fit 32 Celeste             58.00  464.00\n"
-        "TOTAL: 32 unidades  S/ 1550.00\n"
+        "6    Galleta Chocochips PAQ12            15.00   90.00\n"
+        "6    Galleta Chocochips CAJA24           28.00  168.00\n"
+        "12   Galleta Vainilla PAQ12              14.00  168.00\n"
+        "8    Galleta Avena BOLSA500G             13.00  104.00\n"
+        "TOTAL: 32 unidades  S/ 530.00\n"
     )
     items = [
-        {"nombre_general": "Pantalón Strech Semi Pitillo", "cantidad": 6, "precio_costo": 55.00, "talla": "29", "color": "Negro", "sku_sugerido": "PANT-SP-29-NEG-001"},
-        {"nombre_general": "Pantalón Strech Semi Pitillo", "cantidad": 6, "precio_costo": 55.00, "talla": "32", "color": "Azul", "sku_sugerido": "PANT-SP-32-AZU-001"},
-        {"nombre_general": "Polo Oversize Algodón", "cantidad": 12, "precio_costo": 35.50, "talla": "M", "color": "Negro", "sku_sugerido": "POL-OVR-M-NEG-001"},
-        {"nombre_general": "Jeans Mom Fit", "cantidad": 8, "precio_costo": 58.00, "talla": "32", "color": "Celeste", "sku_sugerido": "JEA-MOM-32-CEL-001"},
+        {"nombre_general": "Galleta Chocochips Clasica", "cantidad": 6, "precio_costo": 15.00, "talla": "PAQ12", "color": "CHOCOCHIPS", "sku_sugerido": "GALL-CHOCO-PAQ12-001"},
+        {"nombre_general": "Galleta Chocochips Clasica", "cantidad": 6, "precio_costo": 28.00, "talla": "CAJA24", "color": "CHOCOCHIPS", "sku_sugerido": "GALL-CHOCO-CAJA24-001"},
+        {"nombre_general": "Galleta Vainilla Francesa", "cantidad": 12, "precio_costo": 14.00, "talla": "PAQ12", "color": "VAINILLA", "sku_sugerido": "GALL-VAIN-PAQ12-001"},
+        {"nombre_general": "Galleta Avena Integral", "cantidad": 8, "precio_costo": 13.00, "talla": "BOLSA500G", "color": "AVENA", "sku_sugerido": "GALL-AVENA-500G-001"},
     ]
     return raw_text, items
 

@@ -6,14 +6,14 @@ from app.domain.ports.llm_port import LlmPort
 
 settings = get_settings()
 
-SYSTEM_PROMPT = """Eres un analista senior de retail y control de inventario (Kardex) para una tienda de ropa en Perú (Gamarra).
+SYSTEM_PROMPT = """Eres un analista senior de retail y control de inventario (Kardex) para una tienda de galletas en Perú (Galletar Store).
 Tu tarea: con los datos del Kardex que te dan (más vendidos, menos vendidos, stock crítico), genera UN SOLO PÁRRAFO (4-6 oraciones) en español neutro, directo y accionable.
 
 Reglas:
 - No uses bullet points ni saltos de línea. Un párrafo continuo.
 - Menciona 1-2 productos top y 1 producto de baja rotación con nombre exacto.
 - Recomienda 2 estrategias concretas: ej. bundle, descuento, reposición, liquidación, exhibición, campaña en redes.
-- Considera margen y estacionalidad (campaña escolar, verano, etc. si aparece en notas).
+- Considera margen y estacionalidad (campaña navideña, fin de semana, etc. si aparece en notas).
 - Tono: profesional, optimista, orientado a dueña de tienda.
 - No inventes cifras fuera de las provistas. No saludes, ve al grano.
 - Cierra con una acción prioritaria para la próxima semana.
@@ -48,8 +48,8 @@ async def _llm_mock(prompt: str) -> str:
         "El Kardex muestra tracción clara en {top} con alta rotación, por lo que conviene reponer stock esta semana y negociar mejor precio de costo por volumen con el proveedor; en contraste, {low} presenta baja salida y riesgo de convertirse en stock muerto, así que recomiendo liquidarlo con un bundle ({low} + accesorio) o descuento del 15% y reubicarlo a zona visible en tienda y portada de Instagram. Para el stock crítico, prioriza la reposición de {top} antes de quiebre y evita sobrestockear {low}. Como acción prioritaria, lanza una campaña de 7 días '2x1 en {low} por compra de {top}' para equilibrar flujo de caja y liberar almacén.",
         "Durante el periodo, {top} lidera ventas y valida el margen actual, por lo que sugiere mantener precio y aumentar exhibición en maniquí y stories; mientras {low} arrastra rotación lenta, ideal para activar una estrategia de liquidación cruzada (ej. {low} con 20% off si llevan {top}) y revisar si el precio de costo permite ajustar margen sin perder rentabilidad. El stock crítico de {top} debe reponerse de inmediato para no perder ventas por quiebre. Acción prioritaria: reabastecer {top} y mover {low} a combo promocional esta semana.",
     ]
-    top = "Polo Oversize Algodón"
-    low = "Vestido Lino Verano"
+    top = "Galleta Chocochips Clasica"
+    low = "Galleta Avena Integral"
     m = re.findall(r"- ([^\(]+) \(", prompt)
     if len(m) >= 2:
         top, low = m[0].strip(), m[-1].strip()
