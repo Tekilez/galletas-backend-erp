@@ -24,3 +24,15 @@ def require_supabase() -> Client:
             detail="Supabase no configurado. Define SUPABASE_URL y SUPABASE_SERVICE_KEY en .env"
         )
     return client
+
+def single_row(res):
+    """Extrae la primera fila (dict) de una respuesta supabase-py con .select(), o None."""
+    try:
+        data = getattr(res, "data", res)
+        if isinstance(data, list):
+            return data[0] if data else None
+        if isinstance(data, dict):
+            return data
+        return None
+    except Exception:
+        return None

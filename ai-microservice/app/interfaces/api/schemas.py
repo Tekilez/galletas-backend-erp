@@ -219,3 +219,30 @@ class TransaccionResponse(TransaccionBase):
 
     class Config:
         from_attributes = True
+
+# ---------- DEVOLUCIONES ----------
+class DevolucionItem(BaseModel):
+    variante_id: str = Field(..., example="uuid-variante")
+    cantidad: int = Field(..., gt=0, example=2)
+    motivo: Optional[str] = Field(default=None, example="Galleta rota")
+
+class DevolucionCreate(BaseModel):
+    nota_codigo: str = Field(..., example="NV-20250920-AB12")
+    items: List[DevolucionItem] = Field(..., min_length=1)
+    motivo_general: Optional[str] = Field(default=None, example="Cliente insatisfecho")
+    motivo: Optional[str] = Field(default=None, description="Alias de motivo_general")
+
+class DevolucionResponse(BaseModel):
+    id: str
+    codigo: str
+    nota_codigo: str
+    cliente: Optional[dict] = None
+    motivo: Optional[str] = None
+    items: List[dict] = Field(default_factory=list)
+    total_devuelto: float = 0.0
+    created_by: Optional[str] = None
+    vendedor_nombre: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

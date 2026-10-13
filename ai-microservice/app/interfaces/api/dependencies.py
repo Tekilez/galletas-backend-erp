@@ -13,6 +13,7 @@ from app.application.use_cases.insights_use_cases import InsightsUseCases
 from app.application.use_cases.chat_use_cases import ChatUseCases
 from app.application.use_cases.cliente_use_cases import ClienteUseCases
 from app.application.use_cases.nota_use_cases import NotaUseCases
+from app.application.use_cases.devolucion_use_cases import DevolucionUseCases
 
 @lru_cache
 def get_producto_use_cases() -> ProductoUseCases:
@@ -47,3 +48,8 @@ def get_cliente_use_cases() -> ClienteUseCases:
 def get_nota_use_cases() -> NotaUseCases:
     from app.infrastructure.persistence.supabase_nota_repository import SupabaseNotaRepository
     return NotaUseCases(SupabaseNotaRepository())
+
+@lru_cache
+def get_devolucion_use_cases() -> DevolucionUseCases:
+    from app.infrastructure.persistence.supabase_devolucion_repository import SupabaseDevolucionRepository
+    return DevolucionUseCases(SupabaseDevolucionRepository())
