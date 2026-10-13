@@ -19,7 +19,7 @@ from fastapi.responses import JSONResponse
 
 from app.infrastructure.config.settings import get_settings
 # Adapters primarios (interfaces)
-from app.interfaces.api.routers import ocr, insights, productos, variantes, transacciones, chat, clientes, notas
+from app.interfaces.api.routers import ocr, insights, productos, variantes, transacciones, chat, clientes, notas, auth, devoluciones, asistencia, vendedores
 from app.interfaces.api.schemas import HealthResponse
 
 settings = get_settings()
@@ -68,6 +68,11 @@ app.include_router(transacciones.router)
 # Routers Vendedor (Ingresos/Reportes)
 app.include_router(clientes.router)
 app.include_router(notas.router)
+# Routers Auth + Devoluciones + Asistencia (los archivos existian pero no estaban montados -> 404)
+app.include_router(auth.router)
+app.include_router(devoluciones.router)
+app.include_router(asistencia.router)
+app.include_router(vendedores.router)
 
 # Health & Root
 @app.get("/", tags=["Health"])
