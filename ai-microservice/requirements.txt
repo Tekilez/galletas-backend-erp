@@ -23,5 +23,10 @@ supabase==2.31.0
 python-barcode==0.16.1
 reportlab==4.2.0
 
+# Auth multi-vendedor (JWT + password hashing) - requerido por routers auth/asistencia/vendedores
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+
 # Prod server
 gunicorn==23.0.0
